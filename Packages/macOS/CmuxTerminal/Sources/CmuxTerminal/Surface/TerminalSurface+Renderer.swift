@@ -29,6 +29,11 @@ extension TerminalSurface {
     /// calls `ghostty_surface_set_focus` directly (bypassing `setFocus`).
     /// Without this, `createSurface` would replay a stale state on recreation.
     public func recordExternalFocusState(_ focused: Bool) {
+#if DEBUG
+        if focused, !desiredFocusState, ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            print("FOCUSSTACK record " + Thread.callStackSymbols.prefix(16).joined(separator: " | "))
+        }
+#endif
         desiredFocusState = focused
     }
 
@@ -41,6 +46,11 @@ extension TerminalSurface {
         // Only send focus events when the state changes to avoid redundant
         // prompt redraws with zsh themes like Powerlevel10k.
         guard force || focused != desiredFocusState else { return }
+#if DEBUG
+        if focused, !desiredFocusState, ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            print("FOCUSSTACK setFocus " + Thread.callStackSymbols.prefix(16).joined(separator: " | "))
+        }
+#endif
         desiredFocusState = focused
         // Track desired state even before the C surface exists (e.g. during
         // layout restoration). createSurface syncs the state once created.
